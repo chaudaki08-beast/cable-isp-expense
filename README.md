@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SB CashFlow
 
-## Getting Started
+A clean, mobile-first **income & expense tracker** — a Progressive Web App you
+can install on your phone. Sign in, then track money across three simple tabs:
+**Dashboard · Income · Expenses**.
 
-First, run the development server:
+- Running balance with opening/closing carry-over
+- Category breakdown, day-grouped transactions, search
+- Period filter (this month / 3m / 6m / year / all) with month stepping
+- Add/edit/delete via a bottom sheet · light & dark themes · ₹/$/€… currency
+- Installable PWA, works offline (app shell)
+
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Supabase
+(Postgres + Auth) · Tailwind v4.
+
+---
+
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.local.example .env.local   # then fill in your Supabase keys
+npm run dev                        # http://localhost:3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create `.env.local` (never commit it) with values from your Supabase project
+**Settings → API Keys**:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Where to find it |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL (e.g. `https://xxxx.supabase.co`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `anon` / `publishable` key (public, safe) |
+| `SUPABASE_SERVICE_ROLE_KEY` | `service_role` / `secret` key (**server only**) |
 
-## Learn More
+### Database
 
-To learn more about Next.js, take a look at the following resources:
+In the Supabase **SQL Editor**, run [`supabase/setup.sql`](supabase/setup.sql)
+once (schema + triggers + row-level security + seed categories). Create your
+login under **Authentication → Users**, then in SQL:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```sql
+update public.profiles set role = 'owner' where email = 'you@example.com';
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Deploy to Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push this repo to GitHub.
+2. On [vercel.com](https://vercel.com) → **Add New → Project** → import the repo.
+3. Add the three environment variables above in **Settings → Environment
+   Variables** (all environments).
+4. **Deploy.** Vercel builds and hosts it; Supabase remains the backend.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The data model lives in `income`, `expenses`, and `categories` tables; the app
+merges income + expenses into one list (see `src/lib/finance.ts` for the pure
+balance/period math and `src/hooks/use-transactions.ts` for the data pipeline).
